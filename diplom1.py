@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 
 
 #(eshmargunov) и id (171691064)
@@ -16,12 +17,18 @@ import json
 ]
 '''
 
-
-
-
 def make_request(method, user_id, access_token):
 	full_url = 'https://api.vk.com/method/' + method + '?user_id=' + user_id + '&v=5.52' + '&access_token=' + access_token + '&fields=city,photo_50'
-	return requests.get(full_url).json()
+	repeat = True
+	while repeat:
+		print('.', end = '')
+		response = requests.get(full_url).json()
+		if 'error' in response :
+			if response['error']['error_code'] == 6 :
+				time.sleep(5)
+		else:
+			repeat = False
+	return response
 
 class VkUser():
 	def __init__(self, user_id, token):
@@ -40,6 +47,16 @@ class VkUser():
 			self.last_name = api_response
 			self.friends = api_response
 
+	def friends_id(self):
+		api_response = make_request('users.get', self.user_id,self.token)
+		result_list = []
+		if 'error' not in api_response.keys():
+			for one_friend in self.friends['response']['items']:
+				result_list.append(one_friend['id'])
+		else:
+			result_list.append('error found')
+		return result_list
+
 	def __and__(self, target_user):
 		#self.target_user = target_user
 		full_url = 'https://api.vk.com/method/friends.getMutual' + '?source_uid=' + self.user_id + '&target_uid=' + target_user.user_id + '&v=5.52' + '&access_token=' + self.token
@@ -53,7 +70,6 @@ class VkUser():
 				for chunk in r:
 					f.write(chunk)
 		return self.photo_filename
-#	def __str__(self):
 
 	def friend_list_table(self):
 		if 'response' in self.friends.keys():
@@ -81,13 +97,35 @@ class VkUser():
 			fr_list.append(self.friends)
 		return fr_list
 
+	def group_list(self):
+		full_url = 'https://api.vk.com/method/users.getSubscriptions' + '?user_id=' + self.user_id + '&v=5.52' + '&access_token=' + self.token
+		return requests.get(full_url).json()['response']['groups']['items']
+
+
 #token = input('Введите токен: ')
-token = '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1'
 
 
+def get_all_fr_groups(user):
+	result_list = []
+	for friend in user.friends_id():
+		result_list.append(VkUser(str(friend), token).friends_id())
 
-testuser = VkUser('171691064',token)
 
+#testuser = VkUser('171691064',token)
+testuser = VkUser('552934290', token)
 print('Testuser:', testuser)
+
+# декомпозиция
+# надо получить списки всех групп всех пользователей - основного и его друзей
+# надо сделать исключение множеств групп пользователя и групп его друзей
+# user1(g1,g2,g3,g4)
+# user1(fr1,fr2)
+# fr1(g1,g2)
+# fr2(g2,g3)
+# res g4
+# то есть можно получить список всех групп у друзей, можно выкинуть не уникальные, и по оставшемуся сматчивать. Совпавшее выкидывать типа pop?
+
+
+# 
 
 
