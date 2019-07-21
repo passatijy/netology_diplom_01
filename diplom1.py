@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-
+from mkreq import make_config, make_pretty_request
 
 #(eshmargunov) и id (171691064)
 '''
@@ -16,6 +16,14 @@ import time
     }
 ]
 '''
+base_url = 'https://api.vk.com/method/'
+base_config = {
+	'access_token': '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1',
+	'method': 'users.get',
+	'user_id': '552934290',
+	'version': '5.52'
+}
+
 
 def make_request(method, user_id, access_token):
 	full_url = 'https://api.vk.com/method/' + method + '?user_id=' + user_id + '&v=5.52' + '&access_token=' + access_token + '&fields=city,photo_50'
@@ -31,26 +39,34 @@ def make_request(method, user_id, access_token):
 	return response
 
 class VkUser():
-	def __init__(self, user_id, token):
+	def __init__(self, user_id, token, req_conf):
 		self.token = token
 		self.user_id = user_id
-		api_response = make_request('users.get', self.user_id,self.token)
-		print('response: ', api_response)
-		if 'error' not in api_response.keys():
-			self.first_name = api_response['response'][0]['first_name']
-			self.last_name = api_response['response'][0]['last_name']
-			self.friends = make_request('friends.get', self.user_id, self.token)
-			if 'photo_200' in api_response['response'][0]:
-				self.ava_url = api_response['response'][0]['photo_200']
+		self.req_conf = req_conf
+		self.req_conf['method'] = 'users.get'
+		self.req_conf['fields'] = 'city,photo_50'
+		self.api_response = make_pretty_request(make_config(base_url,**req_conf))
+		#api_response = make_request('users.get', self.user_id,self.token)
+		print('response: ', self.api_response)
+		if 'error' not in self.api_response.keys():
+			self.first_name = self.api_response['response'][0]['first_name']
+			self.last_name = self.api_response['response'][0]['last_name']
+			self.req_conf['method'] = 'friends.get'
+			#self.friends = make_request('friends.get', self.user_id, self.token)
+			self.friends = make_pretty_request(make_config(base_url,**req_conf))
+			if 'photo_50' in self.api_response['response'][0]:
+				self.ava_url = self.api_response['response'][0]['photo_50']
 		else:
-			self.first_name = api_response
-			self.last_name = api_response
-			self.friends = api_response
+			self.first_name = self.api_response
+			self.last_name = self.api_response
+			self.friends = self.api_response
 
 	def friends_id(self):
-		api_response = make_request('users.get', self.user_id,self.token)
+		#api_response = make_request('users.get', self.user_id,self.token)
+		#self.req_conf = 
+		#api_response = make_pretty_request
 		result_list = []
-		if 'error' not in api_response.keys():
+		if 'error' not in self.api_response.keys():
 			for one_friend in self.friends['response']['items']:
 				result_list.append(one_friend['id'])
 		else:
@@ -110,9 +126,10 @@ def get_all_fr_groups(user):
 	for friend in user.friends_id():
 		result_list.append(VkUser(str(friend), token).friends_id())
 
+token = '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1'
 
 #testuser = VkUser('171691064',token)
-testuser = VkUser('552934290', token)
+testuser = VkUser('552934290', token, base_config)
 print('Testuser:', testuser)
 
 # декомпозиция
