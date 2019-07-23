@@ -1,19 +1,22 @@
 import requests
 import time
+from tqdm import tqdm
+
 base_url = 'https://api.vk.com/method/'
 def make_config(base_url,**kvargs):
 	full_url = base_url
-	#print('1 full_url=', full_url)
 	make_request_config_error = False
 	if 'access_token' in kvargs.keys():
 		access_token = kvargs['access_token']
 		if 'method' in kvargs.keys():
 			method = kvargs['method']
 			full_url = full_url + method
-			#print('2 full_url=', full_url)
 			if 'user_id' in kvargs.keys():
 				user_id = kvargs['user_id']
 				full_url = full_url + '?user_id=' + user_id
+			elif 'users_ids' in kvargs.keys():
+				users_ids = kvargs['users_ids']
+				full_url = full_url + '?users_ids=' + users_ids
 			if 'target_uid' in kvargs.keys():
 				target_uid = kvargs['target_uid']
 				full_url = full_url + '&target_uid=' + target_uid
