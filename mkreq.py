@@ -36,6 +36,8 @@ def make_config(base_url,**kvargs):
 		full_url = 'Error, no access_token given'
 	return full_url
 
+
+
 def make_request(full_url):
 	try:
 		response = requests.get(full_url).json()
@@ -59,6 +61,24 @@ def make_pretty_request(full_url):
 		return response
 	except Exception as e:
 		print('Some error occured', e)
+
+def make_pretty_request_v2(base_url,config):
+	try:
+		repeat = True
+		while repeat:
+			response = requests.get(base_url, params = config).json()
+			if 'error' in response.keys():
+				if response['error']['error_code'] == 6 :
+					print('..to many req..',end='')
+					time.sleep(2)
+				else:
+					repeat = False
+			else:
+				repeat = False
+		return response
+	except Exception as e:
+		print('Some error occured', e)
+
 
 config = {
 	'access_token': '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1',

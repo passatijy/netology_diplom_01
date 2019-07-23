@@ -1,7 +1,7 @@
 import requests
 import json
 import time
-from mkreq import make_config, make_pretty_request
+from mkreq import make_config, make_pretty_request, make_pretty_request_v2
 from tqdm import tqdm
 
 #(eshmargunov) и id (171691064)
@@ -191,9 +191,9 @@ tmp_cfg['user_id']='171691064'
 tmp_usr = VkUser(token, tmp_cfg)
 
 
-uniq_friend_list = uniq_list(get_all_fr_groups(tmp_usr))
-final_result = find_uniq_group(tmp_usr.friends_id(),uniq_friend_list)
-print('Result is: ', final_result)
+#uniq_friend_list = uniq_list(get_all_fr_groups(tmp_usr))
+#final_result = find_uniq_group(tmp_usr.friends_id(),uniq_friend_list)
+#print('Result is: ', final_result)
 
 
 # декомпозиция
