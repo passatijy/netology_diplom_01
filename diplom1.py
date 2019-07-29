@@ -25,21 +25,6 @@ base_config = {
 	'version': '5.52'
 }
 
-'''
-def make_request(method, user_id, access_token):
-	full_url = 'https://api.vk.com/method/' + method + '?user_id=' + user_id + '&v=5.52' + '&access_token=' + access_token + '&fields=city,photo_50'
-	repeat = True
-	while repeat:
-		print('.', end = '')
-		response = requests.get(full_url).json()
-		if 'error' in response :
-			if response['error']['error_code'] == 6 :
-				time.sleep(5)
-		else:
-			repeat = False
-	return response
-'''
-
 class VkUser():
 	def __init__(self, token, req_conf):
 		self.token = token
@@ -165,46 +150,48 @@ def find_uniq_group(list_a, list_b):
 			counter = counter + 1
 	return {'counter':counter,'result':result}
 
-def json_result(list):
-	tmp_config = base_config.copy()
-	if 'user_id' in tmp_config :
-		tmp_config.pop('user_id')
-	tmp_config['method'] = 'groups.getById'
-	tmp_config['feilds'] = 'members_count,'
-	tmp_config['group_ids'] = list
-	result = make_pretty_request(make_config(base_url,**tmp_config))
-
+def json_result(in_dict):
+	result = []
+	group_config = {
+	'access_token': '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1',
+	'method': 'groups.getById',
+	'version': '5.52'
+	}
+	group_id_list = ''
+	for k in in_dict['result']:
+		group_id_list = group_id_list + str(k) + ','
+	group_config['group_ids'] = group_id_list[:-1]
+	#print('group_id_list: ', group_id_list, ' group_config: ', group_config)
+	groups_dict = make_pretty_request(make_config(base_url,**group_config))
+	del group_config['group_ids']
+	if 'response' in groups_dict.keys():
+		for k in groups_dict['response']:
+			res_dict = {}
+			res_dict['gid'] = str(k['id'])
+			res_dict['name'] = k['name']
+			group_config['method'] = 'groups.getMembers'
+			group_config['group_id'] = str(k['id'])
+			res_dict['count'] = make_pretty_request(make_config(base_url,**group_config))['response']['count'] 
+			result.append(res_dict)
+	else:
+		result = result.append('error in get_group request')
+	return result
 
 token = '73eaea320bdc0d3299faa475c196cfea1c4df9da4c6d291633f9fe8f83c08c4de2a3abf89fbc3ed8a44e1'
 
-#testuser = VkUser('171691064',token, base_config)
-#testuser = VkUser('552934290', token, base_config)
-#print('Testuser:', testuser)
-
-'''
-tmp_config = base_config.copy()
-tmp_config['user_id']='547233513'
-tmp_user = VkUser('547233513', token, tmp_config)
-'''
+#################### создаем пользователя
 tmp_cfg = base_config.copy()
 tmp_cfg['user_id']='171691064'
 tmp_usr = VkUser(token, tmp_cfg)
 
+#################### получаем список всех групп всех друзей пользователя:
+uniq_friend_list = uniq_list(get_all_fr_groups(tmp_usr))
 
-#uniq_friend_list = uniq_list(get_all_fr_groups(tmp_usr))
-#final_result = find_uniq_group(tmp_usr.friends_id(),uniq_friend_list)
-#print('Result is: ', final_result)
+#out_dict = {'counter': 7, 'result': [8564, 134709480, 125927592, 101522128, 27683540, 4100014, 35486626]}
 
-
-# декомпозиция
-# надо получить списки всех групп всех пользователей - основного и его друзей
-# надо сделать исключение множеств групп пользователя и групп его друзей
-# user1(g1,g2,g3,g4)
-# user1(fr1,fr2)
-# fr1(g1,g2)
-# fr2(g2,g3)
-# res g4
-# то есть можно получить список всех групп у друзей, можно выкинуть не уникальные, и по оставшемуся сматчивать. Совпавшее выкидывать типа pop?
-# 
+#################### получаем список уникальных групп у этого пользователя:
+final_result = find_uniq_group(tmp_usr.get_group(),uniq_friend_list)
 
 
+with open('out.json', 'w') as json_file:
+	json.dump(json_result(final_result), json_file)

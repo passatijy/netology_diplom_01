@@ -17,6 +17,12 @@ def make_config(base_url,**kvargs):
 			elif 'users_ids' in kvargs.keys():
 				users_ids = kvargs['users_ids']
 				full_url = full_url + '?users_ids=' + users_ids
+			elif 'group_id' in kvargs.keys():
+				group_id = kvargs['group_id']
+				full_url = full_url + '?group_id=' + group_id
+			elif 'group_ids' in kvargs.keys():
+				group_ids = kvargs['group_ids']
+				full_url = full_url + '?group_ids=' + group_ids
 			if 'target_uid' in kvargs.keys():
 				target_uid = kvargs['target_uid']
 				full_url = full_url + '&target_uid=' + target_uid
